@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 EXPECTED_SCHEMA = {
     "id": "int64",
     "name": "object",
@@ -6,43 +10,53 @@ EXPECTED_SCHEMA = {
 }
 
 
-# Schema validation + type enforcement
 def validate_schema(df):
-    missing_cols = set(EXPECTED_SCHEMA.keys()) - set(df.columns)
+    missing = set(EXPECTED_SCHEMA) - set(df.columns)
 
-    if missing_cols:
-        raise ValueError(f"Missing columns: {missing_cols}")
+    if missing:
+        logger.error(f"Missing columns: {missing}")
+        raise ValueError(missing)
 
-    for col, expected_type in EXPECTED_SCHEMA.items():
+    for col, dtype in EXPECTED_SCHEMA.items():
         try:
-            df[col] = df[col].astype(expected_type)
+            df[col] = df[col].astype(dtype)
         except Exception:
-            raise TypeError(
-                f"Column '{col}' cannot be converted to {expected_type}, got {df[col].dtype}"
-            )
+            logger.exception(f"Type conversion failed for column: {col}")
+            raise
 
 
-# Null handling
 def handle_nulls(df):
-    if df.isnull().sum().sum() > 0:
-        print("Null values found. Dropping rows with nulls.")
+    null_cells = df.isnull().sum().sum()
+    null_rows = df.isnull().any(axis=1).sum()
+
+    if null_cells > 0:
+        logger.warning(f"Null cells found: {null_cells}")
+        logger.warning(f"Rows containing nulls: {null_rows}")
+        logger.info(f"Null count by column:\n{df.isnull().sum()}")
+        logger.info(f"Preview before dropna:\n{df.head()}")
+
         df = df.dropna()
+
+        logger.info(f"Shape after null removal: {df.shape}")
+
     return df
 
 
-# Duplicate handling
 def remove_duplicates(df):
     before = len(df)
     df = df.drop_duplicates()
-    after = len(df)
+    removed = before - len(df)
 
-    print(f"Removed {before - after} duplicate rows.")
+    logger.info(f"Duplicates removed: {removed}")
     return df
 
 
-# Combined validation pipeline
 def validate_dataframe(df):
+    logger.info("Starting validation stage")
+
     validate_schema(df)
     df = handle_nulls(df)
     df = remove_duplicates(df)
+
+    logger.info("Validation stage completed")
     return df

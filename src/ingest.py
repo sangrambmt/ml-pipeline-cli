@@ -1,28 +1,33 @@
 import os
 import pandas as pd
+import logging
 
-# ingestion module
+logger = logging.getLogger(__name__)
+
+
 def load_csv(file_path: str) -> pd.DataFrame:
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File not found: {file_path}")
+        logger.error(f"File not found: {file_path}")
+        raise FileNotFoundError(file_path)
 
     try:
         df = pd.read_csv(file_path)
     except Exception as e:
-        raise RuntimeError(f"Error reading CSV: {e}")
+        logger.exception("CSV read failed")
+        raise RuntimeError(e)
 
     if df.empty:
-        raise ValueError("CSV file is empty")
+        logger.warning("CSV is empty")
+        raise ValueError("Empty CSV")
+
+    logger.info(f"Loaded data shape: {df.shape}")
+    logger.info(f"Columns: {list(df.columns)}")
 
     return df
 
-# schema inspection
+
 def inspect_dataframe(df: pd.DataFrame) -> None:
-    print("\n--- Data Preview ---")
-    print(df.head())
-
-    print("\n--- Schema ---")
-    print(df.dtypes)
-
-    print("\n--- Shape ---")
-    print(df.shape)
+    logger.info("Inspecting dataframe")
+    logger.info(f"\nPreview:\n{df.head()}")
+    logger.info(f"\nSchema:\n{df.dtypes}")
+    logger.info(f"\nShape: {df.shape}")
