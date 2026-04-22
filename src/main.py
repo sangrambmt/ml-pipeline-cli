@@ -22,6 +22,9 @@ def main() -> None:
     input_dir = os.getenv("INPUT_DIR", "data/raw")
     input_path = args.input or os.path.join(input_dir, "sample.csv")
 
+    # ✅ Added single line (config visibility)
+    logger.info(f"Pipeline config: input_path={input_path}, log_level={os.getenv('LOG_LEVEL')}")
+
     if not input_path.endswith(".csv"):
         logger.error("Invalid file type")
         raise ValueError("Only CSV files are supported")
