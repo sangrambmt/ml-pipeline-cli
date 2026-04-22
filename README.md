@@ -6,32 +6,39 @@ Focus:
 - environment control
 - reproducibility
 - pipeline thinking
+- data validation contracts
 
 ---
 
 ## Current Stage
 
-Day 2 — CSV Ingestion
+Day 3 — Validation Layer
 
 Pipeline:
 
-CLI → load_csv → inspect
+CLI → ingest → validate → inspect
 
 ---
 
 ## Features
 
-- CLI-based execution using argparse
-- Config-driven paths using `.env`
-- CSV ingestion using pandas
-- Fail-fast error handling:
+### Ingestion
+- Read CSV from CLI or `.env`
+- Fail-fast on:
   - missing file
   - empty file
   - non-CSV input
-- Data inspection:
-  - preview (head)
-  - schema (dtypes)
-  - shape
+
+### Validation (NEW)
+- Schema enforcement (strict column contract)
+- Type enforcement using casting (`astype`)
+- Null handling (drop rows with nulls)
+- Duplicate removal
+
+### Inspection
+- Data preview (`head`)
+- Schema (`dtypes`)
+- Shape
 
 ---
 
@@ -40,8 +47,9 @@ CLI → load_csv → inspect
     ml-pipeline-cli/
     │
     ├── src/
-    │   ├── main.py              # entry point (CLI)
+    │   ├── main.py              # CLI entry point
     │   ├── ingest.py            # CSV ingestion + inspection
+    │   ├── validate.py          # validation + cleaning logic
     │   └── utils/               # (reserved)
     │
     ├── data/
@@ -96,24 +104,46 @@ Then run:
 
 ---
 
+## Expected Input Schema
+
+The pipeline enforces a strict schema:
+
+    id      → int64
+    name    → object (string)
+    age     → float64
+    city    → object (string)
+
+---
+
+## Validation Rules
+
+- Missing columns → pipeline fails
+- Incorrect types → auto-cast or fail
+- Null values → rows dropped
+- Duplicate rows → removed
+
+---
+
 ## Example Output
 
     Reading file: data/raw/sample.csv
 
+    Null values found. Dropping rows with nulls.
+    Removed 1 duplicate rows.
+
     --- Data Preview ---
-       id     name   age  salary
-    0   1    Alice  25.0   50000
-    1   2      Bob  30.0   60000
-    2   3  Charlie   NaN   70000
+       id   name   age        city
+    0   1  Alice  25.0  Bangalore
+    1   2    Bob  30.0     Mumbai
 
     --- Schema ---
-    id          int64
-    name       object
-    age       float64
-    salary      int64
+    id        int64
+    name     object
+    age     float64
+    city     object
 
     --- Shape ---
-    (4, 4)
+    (2, 4)
 
 ---
 
@@ -132,7 +162,8 @@ The pipeline fails fast:
 
 - File not found → FileNotFoundError
 - Empty CSV → ValueError
-- Non-CSV input → ValueError
+- Missing columns → ValueError
+- Type conversion failure → TypeError
 
 ---
 
@@ -145,22 +176,32 @@ Defined in `requirements.txt` (version pinned):
 
 ---
 
+## What’s New in Day 3
+
+- Introduced validation layer (`validate.py`)
+- Enforced schema contract
+- Added null handling
+- Added duplicate removal
+- Separated ingestion and validation stages
+
+---
+
 ## What’s Next
 
-Day 3 — Validation Layer:
+Day 4 — Logging & Observability:
 
-- null handling
-- duplicate removal
-- schema validation
-- data cleaning
+- replace print with logging
+- structured logs
+- pipeline visibility
+- log levels (INFO, ERROR)
 
 ---
 
 ## End Goal (Week 4)
 
-Full pipeline:
+Full production-style pipeline:
 
-    data → validation → training → model → API → docker
+    data → validate → train → model → API → docker
 
 Single repo containing:
 
@@ -177,5 +218,6 @@ Single repo containing:
 This project simulates real MLOps workflows:
 
 - reproducible pipelines
+- strict data contracts
 - modular architecture
 - production-oriented practices
