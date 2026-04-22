@@ -1,21 +1,24 @@
 from dotenv import load_dotenv
 import os
+import argparse
+
+from ingest import load_csv, inspect_dataframe
 
 
 def main() -> None:
     load_dotenv()
 
-    app_env = os.getenv("APP_ENV", "dev")
-    log_level = os.getenv("LOG_LEVEL", "INFO")
-    input_dir = os.getenv("INPUT_DIR", "data/raw")
-    output_dir = os.getenv("OUTPUT_DIR", "data/processed")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=str, help="Input CSV path")
 
-    print("Project is running")
-    print(f"APP_ENV: {app_env}")
-    print(f"LOG_LEVEL: {log_level}")
-    print(f"INPUT_DIR: {input_dir}")
-    print(f"OUTPUT_DIR: {output_dir}")
+    args = parser.parse_args()
 
+    input_path = args.input or os.getenv("INPUT_DIR") + "/sample.csv"
+
+    print(f"Reading file: {input_path}")
+
+    df = load_csv(input_path)
+    inspect_dataframe(df)
 
 if __name__ == "__main__":
     main()
