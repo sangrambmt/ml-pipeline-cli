@@ -11,16 +11,14 @@ def setup_logger():
 
     logger = logging.getLogger()
     logger.setLevel(log_level)
-
     logger.handlers.clear()
 
-    # Console handler
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-
-    # File handler
     os.makedirs("logs", exist_ok=True)
+
+    ch = logging.StreamHandler()
     fh = logging.FileHandler("logs/pipeline.log")
+
+    ch.setFormatter(formatter)
     fh.setFormatter(formatter)
 
     logger.addHandler(ch)

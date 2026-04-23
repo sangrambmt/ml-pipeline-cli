@@ -6,7 +6,7 @@
 | Navigate           | `cd ml-pipeline-cli`                             | Move into project          |
 | Create venv        | `python -m venv venv`                            | Create virtual environment |
 | Activate (Windows) | `venv\Scripts\activate`                          | Start virtual environment  |
-| Install packages   | `pip install pandas python-dotenv`               | Install dependencies       |
+| Install packages   | `pip install pandas python-dotenv dvc`           | Install dependencies       |
 | Freeze deps        | `pip freeze > requirements.txt`                  | Save exact versions        |
 | Create folders     | `mkdir src data output logs`                     | Project structure          |
 | Create subfolders  | `mkdir data\raw data\processed`                  | Data directories           |
@@ -81,3 +81,54 @@
 
 ---
 
+# 🆕 DVC Commands (Day 6)
+
+## DVC Setup
+
+| Command                  | Purpose                |
+| ------------------------ | ---------------------- |
+| `pip install dvc`        | Install DVC            |
+| `dvc init`               | Initialize DVC         |
+| `git add .dvc .dvcignore`| Track DVC config       |
+| `git commit -m "chore: initialize dvc"` | Commit setup |
+
+---
+
+## DVC Data Tracking
+
+| Command                                      | Purpose                          |
+| -------------------------------------------- | -------------------------------- |
+| `git rm --cached data/raw/sample.csv`        | Remove file from Git tracking     |
+| `dvc add data/raw/sample.csv`                | Track file with DVC              |
+| `git add .gitignore data/raw/sample.csv.dvc` | Add DVC metadata                 |
+| `git commit -m "data: track dataset with dvc"` | Commit data tracking           |
+
+---
+
+## DVC Pipeline
+
+| Command | Purpose |
+|--------|--------|
+| `dvc stage add -n preprocess -d src/main.py -d src/ingest.py -d src/validate.py -d data/raw/sample.csv -o data/processed/clean.csv python src/main.py --input data/raw/sample.csv` | Create pipeline stage |
+| `dvc repro` | Run pipeline |
+| `dvc dag` | View pipeline graph |
+
+---
+
+## DVC Versioning & Execution
+
+| Command | Purpose |
+|--------|--------|
+| `dvc repro` | Re-run only if changes detected |
+| `dvc checkout` | Restore data from cache |
+| `dvc push` | Push data to remote storage |
+
+---
+
+## DVC Config
+
+| Command | Purpose |
+|--------|--------|
+| `dvc config core.autostage true` | Auto stage dvc.lock changes |
+
+---

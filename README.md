@@ -1,44 +1,56 @@
 # ml-pipeline-cli
 
-Minimal, reproducible data pipeline project built step by step.
-
-Focus:
-- environment control
-- reproducibility
-- pipeline thinking
-- data validation contracts
+Minimal, reproducible data pipeline built with MLOps practices.
 
 ---
 
-## Current Stage
+## Overview
 
-Day 3 — Validation Layer
+This project implements a structured data pipeline with:
 
-Pipeline:
+- CLI-based execution
+- Data validation and cleaning
+- Structured logging
+- Data versioning using DVC
+- Reproducible pipeline execution
 
-CLI → ingest → validate → inspect
+---
+
+## Pipeline Flow
+
+raw.csv → ingest → validate → clean.csv
+
+Execution:
+
+CLI → ingest → validate → save → DVC pipeline
 
 ---
 
 ## Features
 
 ### Ingestion
-- Read CSV from CLI or `.env`
-- Fail-fast on:
-  - missing file
-  - empty file
-  - non-CSV input
+- CSV loading via CLI or .env
+- Fail-fast on missing or invalid files
 
-### Validation (NEW)
-- Schema enforcement (strict column contract)
-- Type enforcement using casting (`astype`)
-- Null handling (drop rows with nulls)
+### Validation
+- Schema enforcement
+- Type casting (astype)
+- Null handling (row removal)
 - Duplicate removal
 
-### Inspection
-- Data preview (`head`)
-- Schema (`dtypes`)
-- Shape
+### Logging
+- Structured logs (INFO, WARNING, ERROR)
+- Console + file output (logs/pipeline.log)
+
+### Data Versioning (DVC)
+- Raw data tracked via DVC
+- Git tracks metadata only
+- Supports reproducibility
+
+### Pipeline (DVC)
+- Defined in dvc.yaml
+- Runs only when inputs change
+- Tracks dependencies and outputs
 
 ---
 
@@ -47,20 +59,21 @@ CLI → ingest → validate → inspect
     ml-pipeline-cli/
     │
     ├── src/
-    │   ├── main.py              # CLI entry point
-    │   ├── ingest.py            # CSV ingestion + inspection
-    │   ├── validate.py          # validation + cleaning logic
-    │   └── utils/               # (reserved)
+    │   ├── main.py
+    │   ├── ingest.py
+    │   ├── validate.py
+    │   ├── logger.py
     │
     ├── data/
-    │   ├── raw/                 # input CSV files
-    │   └── processed/           # cleaned data (future)
+    │   ├── raw/
+    │   └── processed/
     │
-    ├── output/                  # pipeline outputs (future)
-    ├── logs/                    # logs (future)
+    ├── logs/
     │
-    ├── .env                     # environment config
-    ├── .gitignore
+    ├── dvc.yaml
+    ├── dvc.lock
+    ├── .dvc/
+    ├── .env
     ├── requirements.txt
     └── README.md
 
@@ -68,86 +81,65 @@ CLI → ingest → validate → inspect
 
 ## Setup
 
-Create virtual environment:
+Create environment:
 
     python -m venv venv
-
-Activate:
-
-Windows:
-
     venv\Scripts\activate
-
-Mac/Linux:
-
-    source venv/bin/activate
-
-Install dependencies:
-
     pip install -r requirements.txt
 
 ---
 
 ## Run
 
-Using CLI:
+Direct execution:
 
     python src/main.py --input data/raw/sample.csv
 
-Using `.env` fallback:
+DVC pipeline execution:
 
-    INPUT_DIR=data/raw
-
-Then run:
-
-    python src/main.py
+    dvc repro
 
 ---
 
-## Expected Input Schema
+## DVC Workflow
 
-The pipeline enforces a strict schema:
+Track dataset:
 
-    id      → int64
-    name    → object (string)
-    age     → float64
-    city    → object (string)
+    git rm --cached data/raw/sample.csv
+    dvc add data/raw/sample.csv
+    git add .gitignore data/raw/sample.csv.dvc
+    git commit -m "track dataset with dvc"
+
+Create pipeline:
+
+    dvc stage add -n preprocess -d src/main.py -d src/ingest.py -d src/validate.py -d data/raw/sample.csv -o data/processed/clean.csv python src/main.py --input data/raw/sample.csv
+
+Run pipeline:
+
+    dvc repro
 
 ---
 
-## Validation Rules
+## Pipeline Behavior
 
-- Missing columns → pipeline fails
-- Incorrect types → auto-cast or fail
-- Null values → rows dropped
-- Duplicate rows → removed
+- No change → skips execution  
+- Data changed → re-runs pipeline  
+- Code changed → re-runs pipeline  
 
 ---
 
 ## Example Output
 
-    Reading file: data/raw/sample.csv
-
-    Null values found. Dropping rows with nulls.
-    Removed 1 duplicate rows.
-
-    --- Data Preview ---
-       id   name   age        city
-    0   1  Alice  25.0  Bangalore
-    1   2    Bob  30.0     Mumbai
-
-    --- Schema ---
-    id        int64
-    name     object
-    age     float64
-    city     object
-
-    --- Shape ---
-    (2, 4)
+    Loaded data shape: (83, 4)
+    Null cells found: 20
+    Rows containing nulls: 18
+    Shape after null removal: (65, 4)
+    Duplicates removed: 1
+    Final shape: (64, 4)
 
 ---
 
-## Environment Config (.env)
+## Environment Configuration
 
     APP_ENV=dev
     LOG_LEVEL=INFO
@@ -156,68 +148,36 @@ The pipeline enforces a strict schema:
 
 ---
 
-## Error Handling
+## Key Concepts
 
-The pipeline fails fast:
-
-- File not found → FileNotFoundError
-- Empty CSV → ValueError
-- Missing columns → ValueError
-- Type conversion failure → TypeError
+- Git → tracks code  
+- DVC → tracks data  
+- dvc.yaml → defines pipeline  
+- dvc.lock → locks pipeline state  
 
 ---
 
-## Dependencies
+## What’s Implemented
 
-Defined in `requirements.txt` (version pinned):
-
-- pandas
-- python-dotenv
-
----
-
-## What’s New in Day 3
-
-- Introduced validation layer (`validate.py`)
-- Enforced schema contract
-- Added null handling
-- Added duplicate removal
-- Separated ingestion and validation stages
+- CLI pipeline execution  
+- Data validation layer  
+- Logging system  
+- Data versioning (DVC)  
+- Reproducible pipeline  
 
 ---
 
-## What’s Next
+## End Goal
 
-Day 4 — Logging & Observability:
-
-- replace print with logging
-- structured logs
-- pipeline visibility
-- log levels (INFO, ERROR)
-
----
-
-## End Goal (Week 4)
-
-Full production-style pipeline:
-
-    data → validate → train → model → API → docker
-
-Single repo containing:
-
-- CLI pipeline
-- versioned data (DVC)
-- containerized execution (Docker)
-- model training
-- FastAPI serving
+data → validate → train → model → API → docker
 
 ---
 
 ## Purpose
 
-This project simulates real MLOps workflows:
+This project simulates real-world MLOps systems:
 
-- reproducible pipelines
-- strict data contracts
-- modular architecture
-- production-oriented practices
+- reproducible pipelines  
+- data + code versioning  
+- modular architecture  
+- production-oriented workflow  

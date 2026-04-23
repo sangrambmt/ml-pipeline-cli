@@ -33,10 +33,8 @@ def handle_nulls(df):
         logger.warning(f"Null cells found: {null_cells}")
         logger.warning(f"Rows containing nulls: {null_rows}")
         logger.info(f"Null count by column:\n{df.isnull().sum()}")
-        logger.info(f"Preview before dropna:\n{df.head()}")
 
         df = df.dropna()
-
         logger.info(f"Shape after null removal: {df.shape}")
 
     return df
