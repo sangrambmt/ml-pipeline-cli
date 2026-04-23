@@ -1,12 +1,14 @@
 stages:
-  preprocess:
+  pipeline:
     cmd: python src/main.py --input data/raw/sample.csv
     deps:
-      - src/main.py
-      - src/ingest.py
-      - src/validate.py
-      - src/train.py
-      - data/raw/sample.csv
+    - data/raw/sample.csv
+    - src/evaluate.py
+    - src/ingest.py
+    - src/main.py
+    - src/train.py
+    - src/validate.py
     outs:
-      - data/processed/clean.csv
-      - models/model.pkl
+    - data/processed/clean.csv
+    - metrics/metrics.json
+    - models/model.pkl
