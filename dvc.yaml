@@ -1,0 +1,10 @@
+stages:
+  preprocess:
+    cmd: python src/main.py --input data/raw/sample.csv
+    deps:
+      - src/main.py
+      - src/ingest.py
+      - src/validate.py
+      - data/raw/sample.csv
+    outs:
+      - data/processed/clean.csv
